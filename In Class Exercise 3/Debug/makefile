@@ -4,15 +4,15 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := c:/ti/ccsv6/tools/compiler/arm_5.1.8
+CG_TOOL_ROOT := C:/ti/ccsv5/tools/compiler/arm_5.0.4
 
 ORDERED_OBJS += \
 $(GEN_CMDS__FLAG) \
-"./startup_ccs.obj" \
 "./uart_echo_prompt.obj" \
-"../uart_echo_ccs.cmd" \
+"./startup_ccs.obj" \
 -l"libc.a" \
 -l"C:/ti/TivaWare_C_Series-2.1.0.12573/examples/boards/ek-tm4c1294xl/uart_echo/ccs/../../../../../driverlib/ccs/Debug/driverlib.lib" \
+"../uart_echo_ccs.cmd" \
 
 -include ../makefile.init
 
@@ -109,18 +109,6 @@ endif
 -include ../makefile.defs
 
 # Add inputs and outputs from these tool invocations to the build variables 
-EXE_OUTPUTS += \
-In\ Class\ Exercise\ 3.out \
-
-EXE_OUTPUTS__QUOTED += \
-"In Class Exercise 3.out" \
-
-BIN_OUTPUTS += \
-In\ Class\ Exercise\ 3.hex \
-
-BIN_OUTPUTS__QUOTED += \
-"In Class Exercise 3.hex" \
-
 
 # All Target
 all: In\ Class\ Exercise\ 3.out
@@ -129,31 +117,24 @@ all: In\ Class\ Exercise\ 3.out
 In\ Class\ Exercise\ 3.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: ARM Linker'
-	"c:/ti/ccsv6/tools/compiler/arm_5.1.8/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O2 -g --gcc --define=ccs="ccs" --define=PART_TM4C1294NCPDT --define=TARGET_IS_TM4C129_RA0 --display_error_number --diag_warning=225 --diag_wrap=off --gen_func_subsections=on --ual -z -m"uart_echo_ccs.map" --heap_size=0 --stack_size=256 -i"c:/ti/ccsv6/tools/compiler/arm_5.1.8/lib" -i"c:/ti/ccsv6/tools/compiler/arm_5.1.8/include" --reread_libs --warn_sections --display_error_number --diag_wrap=off --xml_link_info="In Class Exercise 3_linkInfo.xml" --rom_model -o "In Class Exercise 3.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv5/tools/compiler/arm_5.0.4/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 --abi=eabi -me -O2 -g --gcc --define=ccs="ccs" --define=PART_TM4C1294NCPDT --define=TARGET_IS_TM4C129_RA0 --diag_warning=225 --display_error_number --diag_wrap=off --gen_func_subsections=on --ual -z --stack_size=256 -m"uart_echo_ccs.map" --heap_size=0 -i"C:/ti/ccsv5/tools/compiler/arm_5.0.4/lib" -i"C:/ti/ccsv5/tools/compiler/arm_5.0.4/include" --reread_libs --warn_sections --display_error_number --diag_wrap=off --xml_link_info="In Class Exercise 3_linkInfo.xml" --rom_model -o "In Class Exercise 3.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
 
-In\ Class\ Exercise\ 3.hex: $(EXE_OUTPUTS)
-	@echo 'Invoking: ARM Hex Utility'
-	"c:/ti/ccsv6/tools/compiler/arm_5.1.8/bin/armhex"  -o "In Class Exercise 3.hex" $(EXE_OUTPUTS__QUOTED)
-	@echo 'Finished building: $@'
-	@echo ' '
-
 # Other Targets
 clean:
-	-$(RM) $(EXE_OUTPUTS__QUOTED)$(BIN_OUTPUTS__QUOTED)
+	-$(RM) $(TMS470_EXECUTABLE_OUTPUTS__QUOTED) "In Class Exercise 3.out"
 	-$(RM) "startup_ccs.pp" "uart_echo_prompt.pp" 
 	-$(RM) "startup_ccs.obj" "uart_echo_prompt.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
 post-build:
-	-"c:/ti/ccsv6/utils/tiobj2bin/tiobj2bin" "In Class Exercise 3.out" "In Class Exercise 3.bin" "c:/ti/ccsv6/tools/compiler/arm_5.1.8/bin/armofd" "c:/ti/ccsv6/tools/compiler/arm_5.1.8/bin/armhex" "c:/ti/ccsv6/utils/tiobj2bin/mkhex4bin"
+	-"C:/ti/ccsv5/utils/tiobj2bin/tiobj2bin" "In Class Exercise 3.out" "In Class Exercise 3.bin" "C:/ti/ccsv5/tools/compiler/arm_5.0.4/bin/armofd" "C:/ti/ccsv5/tools/compiler/arm_5.0.4/bin/armhex" "C:/ti/ccsv5/utils/tiobj2bin/mkhex4bin"
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY: post-build
 
 -include ../makefile.targets
-

@@ -5,7 +5,6 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROGRAM.Stellaris In-Circuit Debug Interface_0/CORTEX_M4_0" value="${build_artifact:In Class Exercise 3}"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.Stellaris In-Circuit Debug Interface_0/CORTEX_M4_0" value="In Class Exercise 3"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:In Class Exercise 3}"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.Stellaris In-Circuit Debug Interface_0/CORTEX_M4_0" value="C:/Users\Drew\Dropbox\School\UNIVERSITY OF WASHINGTON\Homework\Year 3\Fall 2014\Microprocessors\Workspace\TCES430-projects\In Class Exercise 3\Debug\In Class Exercise 3.out"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/In Class Exercise 3"/>
 </listAttribute>
