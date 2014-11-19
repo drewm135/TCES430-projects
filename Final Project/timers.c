@@ -1,3 +1,5 @@
+//Drew, Thinh, Fahad, Keith
+
 /*
  * Timer 0 = Real Time Clock
  * Timer 1 = Thermistor Read (200 ms)
