@@ -1,1 +1,1 @@
-"./uart_echo_prompt.obj" "./startup_ccs.obj" -l"libc.a" -l"C:/ti/TivaWare_C_Series-2.1.0.12573/examples/boards/ek-tm4c1294xl/uart_echo/ccs/../../../../../driverlib/ccs/Debug/driverlib.lib" "../uart_echo_ccs.cmd" 
+"./startup_ccs.obj" "./uart_echo_prompt.obj" "../uart_echo_ccs.cmd" -l"libc.a" -l"C:/ti/TivaWare_C_Series-2.1.0.12573/examples/boards/ek-tm4c1294xl/uart_echo/ccs/../../../../../driverlib/ccs/Debug/driverlib.lib" 
