@@ -96,6 +96,11 @@ uint32_t g_ui32InterruptFlags; //Bit 0 = Thermistor value read
                                //Bit 1 = Proximity value read
                                //Bit 2 = Light value read
                                //Bits 3-31 = Not Used
+
+uint32_t g_ui32PrintFlags;     //Bit 0 = Timer ready to print
+                               //Bit 1 = Thermister data ready to print
+                               //Bit 2 = Proximity data ready to print
+                               //Bit 3 = Light data ready to print
 uint32_t TimerACount;
 
 uint32_t TimerBCount;
@@ -123,6 +128,28 @@ uint32_t RTC_Seconds;
 //
 //*****************************************************************************
 uint32_t adc_value[1]; //Sequencer 3 has a FIFO of size 1
+
+//*****************************************************************************
+//
+// Queues to hold converted data before output
+//
+//*****************************************************************************
+float    g_temp_data[50];   //Temperature data
+
+uint32_t g_prox_data[20];   //Proximity sensor data
+
+uint32_t g_light_data[100]; //Light sensor data
+
+//*****************************************************************************
+//
+// Indexes for data arrays
+//
+//*****************************************************************************
+uint32_t g_temp_index;  //Temp array index
+
+uint32_t g_prox_index;  //Proximity array index
+
+uint32_t g_light_index; //Light array index
 
 //*****************************************************************************
 //
@@ -157,7 +184,7 @@ Timer0IntHandler(void)
     RTC_Hours   = (RTC_Minutes / 60);
     RTC_Days    = RTC_Hours   / 24;
 
-    HWREGBITW(&g_ui32InterruptFlags, 3) = 1;
+    HWREGBITW(&g_ui32PrintFlags, 0) = 1;
 
     /*//
     // Use the flags to Toggle the LED for this timer
@@ -285,9 +312,7 @@ Timer3IntHandler(void)
     //
     // Update the interrupt status.
     //
-    ROM_IntMasterDisable();
-    //UARTprintf("\rT1: %d  T2: %d  T3: %d  T4: %d", TimerACount, TimerBCount, TimerCCount, TimerDCount);
-    ROM_IntMasterEnable();
+
 }
 
 
@@ -333,6 +358,12 @@ calcTemp()
 		float tempK = (float) B / log((((float) VIN/(adc*3.3 / 4096)) - 1) / DENOMINATOR); //Temp in Kelvin
 
 		float tempF = (tempK - 273.15) * 1.8000 + 32.00;
+		g_temp_data[g_temp_index] = tempF;
+		g_temp_index++; //Increase index
+		if (g_temp_index == 50) {
+			g_temp_index = 0;
+			HWREGBITW(&g_ui32PrintFlags, 1) = 1; //Set print flag
+		}
 		//UARTprintf("Fahrenheit Temp = %d\n", (int) tempF); //Print out temp in Fahrenheit
 	}
 }
@@ -359,10 +390,59 @@ void
 UARTSendData()
 { //Sends read data through UART
 	//TODO
-	if (HWREGBITW(&g_ui32InterruptFlags, 3)) { //Clock reading is ready
-		HWREGBITW(&g_ui32InterruptFlags, 3) = 0; //Reset flag
-		UARTprintf("\rDays:Hours:Minutes:Seconds: %02d:%02d:%02d:%02d", RTC_Days, RTC_Hours % 24, RTC_Minutes % 60, RTC_Seconds % 60);
+	int i;
+	float avg_temp;
+	float min_temp = 5000;
+	float max_temp = 0;
+	float std_dev_temp;
+	if (HWREGBITW(&g_ui32PrintFlags, 0)) { //Clock reading is ready
+		HWREGBITW(&g_ui32PrintFlags, 0) = 0; //Reset flag
+	    ROM_IntMasterDisable();
+		UARTprintf("\033[1;1HDays:Hours:Minutes:Seconds: %02d:%02d:%02d:%02d", RTC_Days, RTC_Hours % 24, RTC_Minutes % 60, RTC_Seconds % 60);
+		ROM_IntMasterEnable();
 	}
+	if (HWREGBITW(&g_ui32PrintFlags, 1)) { //Temp readings are ready
+		HWREGBITW(&g_ui32PrintFlags, 1) = 0; //Reset flag
+		//Print temp data
+		for (i = 0; i < 50; i++) { //Calculate min, max, and mean
+			avg_temp += g_temp_data[i];
+			min_temp = g_temp_data[i] < min_temp ? g_temp_data[i] : min_temp;
+			max_temp = g_temp_data[i] > max_temp ? g_temp_data[i] : max_temp;
+		}
+		avg_temp = avg_temp / 50;
+		for (i = 0; i < 50; i++) { //Calculate standard deviation
+			std_dev_temp += (g_temp_data[i] - avg_temp) * (g_temp_data[i] - avg_temp);
+		}
+		std_dev_temp = std_dev_temp / 50;
+		std_dev_temp = sqrt(std_dev_temp);
+		//min_temp = min_temp * 100;
+		//max_temp = max_temp * 100;
+		//avg_temp = avg_temp * 100;
+		std_dev_temp = std_dev_temp * 100;
+
+		ROM_IntMasterDisable();
+		UARTprintf("\n\n+------------------------------------------------------------------------+\n");
+		UARTprintf(    "|                                 Temperature                            |\n");
+		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
+		UARTprintf(    "|        Min       |        Max        |       Mean       |   Std. Dev.  |\n");
+		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
+		UARTprintf(    "|        %d        |        %d         |        %d        |    00.%03d    |\n", (uint32_t) min_temp, (uint32_t) max_temp, (uint32_t) avg_temp, (uint32_t) std_dev_temp);
+		UARTprintf(    "+------------------+-------------------+------------------+--------------+");
+		ROM_IntMasterEnable();
+
+	}
+	if (HWREGBITW(&g_ui32PrintFlags, 2)) { //Proximity readings are ready
+		HWREGBITW(&g_ui32PrintFlags, 2) = 0; //Reset flag
+		//Print proximity data
+
+	}
+	if (HWREGBITW(&g_ui32PrintFlags, 1)) { //light readings are ready
+		HWREGBITW(&g_ui32PrintFlags, 1) = 0; //Reset flag
+		//Print light data
+
+	}
+
+
 }
 
 void
@@ -405,10 +485,20 @@ main(void)
     ROM_FPULazyStackingEnable(); //Enable lazy stacking for faster FPU performance
     ROM_FPUEnable(); //Enable FPU
 
+    TimerACount = 0;
+    TimerBCount = 0;
+    TimerCCount = 0;
+    TimerDCount = 0;
+
+    g_temp_index = 0;
+    g_prox_index = 0;
+    g_light_index = 0;
+
     //
     // Initialize the UART and write status.
     //
     ConfigureUART();
+    UARTprintf("\033[2J"); //Clear screen
 
     //UARTprintf("\033[2JFinal Project Timers Example\n");
 
@@ -460,11 +550,6 @@ main(void)
     ROM_TimerEnable(TIMER1_BASE, TIMER_A); //Temp
     ROM_TimerEnable(TIMER2_BASE, TIMER_A); //Proximity
     ROM_TimerEnable(TIMER3_BASE, TIMER_A); //Light
-
-    TimerACount = 0;
-    TimerBCount = 0;
-    TimerCCount = 0;
-    TimerDCount = 0;
 
     //
     // Loop forever while the timers run.
