@@ -157,6 +157,8 @@ Timer0IntHandler(void)
     RTC_Hours   = (RTC_Minutes / 60);
     RTC_Days    = RTC_Hours   / 24;
 
+    HWREGBITW(&g_ui32InterruptFlags, 3) = 1;
+
     /*//
     // Use the flags to Toggle the LED for this timer
     //
@@ -165,10 +167,7 @@ Timer0IntHandler(void)
     //
     // Update the interrupt status.
     //
-    ROM_IntMasterDisable();
-    //UARTprintf("\rDays: %d   Hours: %d   Minutes: %d   Seconds: %d", RTC_Days, RTC_Hours % 24, RTC_Minutes % 60, RTC_Seconds % 60);
-    //UARTprintf("\rT1: %d  T2: %d  T3: %d  T4: %d", TimerACount, TimerBCount, TimerCCount, TimerDCount);
-    ROM_IntMasterEnable();
+
 }
 
 //*****************************************************************************
@@ -334,7 +333,7 @@ calcTemp()
 		float tempK = (float) B / log((((float) VIN/(adc*3.3 / 4096)) - 1) / DENOMINATOR); //Temp in Kelvin
 
 		float tempF = (tempK - 273.15) * 1.8000 + 32.00;
-		UARTprintf("Fahrenheit Temp = %d\n", (int) tempF); //Print out temp in Fahrenheit
+		//UARTprintf("Fahrenheit Temp = %d\n", (int) tempF); //Print out temp in Fahrenheit
 	}
 }
 
@@ -360,7 +359,10 @@ void
 UARTSendData()
 { //Sends read data through UART
 	//TODO
-
+	if (HWREGBITW(&g_ui32InterruptFlags, 3)) { //Clock reading is ready
+		HWREGBITW(&g_ui32InterruptFlags, 3) = 0; //Reset flag
+		UARTprintf("\rDays:Hours:Minutes:Seconds: %02d:%02d:%02d:%02d", RTC_Days, RTC_Hours % 24, RTC_Minutes % 60, RTC_Seconds % 60);
+	}
 }
 
 void
@@ -408,8 +410,7 @@ main(void)
     //
     ConfigureUART();
 
-    UARTprintf("\033[2JFinal Project Timers Example\n");
-    UARTprintf("T1: 0  T2: 0 T3: 0 T4:0");
+    //UARTprintf("\033[2JFinal Project Timers Example\n");
 
     configureADC();
 
