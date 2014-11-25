@@ -415,18 +415,19 @@ UARTSendData()
 		}
 		std_dev_temp = std_dev_temp / 50;
 		std_dev_temp = sqrt(std_dev_temp);
-		//min_temp = min_temp * 100;
-		//max_temp = max_temp * 100;
-		//avg_temp = avg_temp * 100;
-		std_dev_temp = std_dev_temp * 100;
+		//std_dev_temp = std_dev_temp * 100;
 
 		ROM_IntMasterDisable();
 		UARTprintf("\n\n+------------------------------------------------------------------------+\n");
 		UARTprintf(    "|                                 Temperature                            |\n");
 		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
-		UARTprintf(    "|        Min       |        Max        |       Mean       |   Std. Dev.  |\n");
+		UARTprintf(    "|       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
 		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
-		UARTprintf(    "|        %d        |        %d         |        %d        |    00.%03d    |\n", (uint32_t) min_temp, (uint32_t) max_temp, (uint32_t) avg_temp, (uint32_t) std_dev_temp);
+		UARTprintf(    "|      %d.%02d       |       %d.%02d       |       %d.%02d      |    %d.%03d     |\n",
+				(uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100,
+				(uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100,
+				(uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100,
+				(uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
 		UARTprintf(    "+------------------+-------------------+------------------+--------------+");
 		ROM_IntMasterEnable();
 
