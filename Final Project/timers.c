@@ -577,11 +577,17 @@ UARTSendData()
 				(uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100,
 				(uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
 		UARTprintf(    "+------------------+-------------------+------------------+--------------+");*/
-		UARTprintf("\033[3;1HMin       Temp = %d.%02d\n", (uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100);
+
+
+
+		UARTprintf("\033[3;1H+-----------------+------------------+-------------------+------------------+--------------+\n");
+		UARTprintf("|      Sensor     |       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
+		UARTprintf("+-----------------+------------------+-------------------+------------------+--------------+\n");
+
+		UARTprintf("Min       Temp = %d.%02d\n", (uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100);
 		UARTprintf("Max       Temp = %d.%02d\n", (uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100);
 		UARTprintf("Mean      Temp = %d.%02d\n", (uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100);
 		UARTprintf("Std. Dev. Temp = %d.%03d"  , (uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
-		//UARTFlushTx(true);
 
 		ROM_IntMasterEnable();
 

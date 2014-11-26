@@ -1,17 +1,17 @@
 ******************************************************************************
                   TI ARM Linker PC v5.1.8                      
 ******************************************************************************
->> Linked Tue Nov 25 18:16:53 2014
+>> Linked Wed Nov 26 14:59:01 2014
 
 OUTPUT FILE NAME:   <Final Project.out>
-ENTRY POINT SYMBOL: "_c_int00"  address: 00001eb5
+ENTRY POINT SYMBOL: "_c_int00"  address: 00001fe5
 
 
 MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00100000  00002500  000fdb00  R  X
+  FLASH                 00000000   00100000  00002630  000fd9d0  R  X
   SRAM                  20000000   00040000  00000424  0003fbdc  RW X
 
 
@@ -19,11 +19,11 @@ SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    00002500   00002500    r-x
+00000000    00000000    00002630   00002630    r-x
   00000000    00000000    00000200   00000200    r-- .intvecs
-  00000200    00000200    00002038   00002038    r-x .text
-  00002238    00002238    00000230   00000230    r-- .const
-  00002468    00002468    00000098   00000098    r-- .cinit
+  00000200    00000200    00002168   00002168    r-x .text
+  00002368    00002368    00000230   00000230    r-- .const
+  00002598    00002598    00000098   00000098    r-- .cinit
 20000000    20000000    00000424   00000000    rw-
   20000000    20000000    000001cc   00000000    rw- .data
   200001cc    200001cc    00000158   00000000    rw- .bss
@@ -41,81 +41,81 @@ section   page    origin      length       input sections
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
 
-.text      0    00000200    00002038     
-                  00000200    00000414     timers.obj (.text:UARTSendData)
-                  00000614    000002ec     rtsv7M4_T_le_v4SPD16_eabi.lib : xlog.obj (.text)
-                  00000900    00000210     timers.obj (.text:main)
-                  00000b10    000001fc     driverlib.lib : sysctl.obj (.text:SysCtlClockFreqSet)
-                  00000d0c    000001ea     uartstdio.obj (.text:UARTvprintf)
-                  00000ef6    000001b6     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_add_t2.obj (.text)
-                  000010ac    00000160     timers.obj (.text:calcTemp)
-                  0000120c    00000148     rtsv7M4_T_le_v4SPD16_eabi.lib : sqrt.obj (.text)
-                  00001354    00000136                                   : fd_div_t2.obj (.text)
-                  0000148a    00000002     startup_ccs.obj (.text:FaultISR)
-                  0000148c    00000110     rtsv7M4_T_le_v4SPD16_eabi.lib : xdscale.obj (.text)
-                  0000159c    000000fc                                   : fd_mul_t2.obj (.text)
-                  00001698    000000f4     timers.obj (.text:Timer2IntHandler)
-                  0000178c    000000c4     rtsv7M4_T_le_v4SPD16_eabi.lib : xdnorm.obj (.text)
-                  00001850    0000009c                                   : memcpy_t2.obj (.text)
-                  000018ec    00000094                                   : auto_init.obj (.text)
-                  00001980    0000008c     timers.obj (.text:configureADC)
-                  00001a0c    00000086     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_cmp_t2.obj (.text:__aeabi_cdcmple)
-                  00001a92    00000002     startup_ccs.obj (.text:IntDefaultHandler)
-                  00001a94    00000080     timers.obj (.text:Timer1IntHandler)
-                  00001b14    0000007c     timers.obj (.text:Timer0IntHandler)
-                  00001b90    0000007c     timers.obj (.text:calcProx)
-                  00001c0c    00000064     rtsv7M4_T_le_v4SPD16_eabi.lib : xdunscal.obj (.text)
-                  00001c70    00000060     uartstdio.obj (.text:UARTStdioConfig)
-                  00001cd0    0000005e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_rle.obj (.text)
-                  00001d2e    00000002     startup_ccs.obj (.text:NmiSR)
-                  00001d30    0000005c     timers.obj (.text:ConfigureUART)
-                  00001d8c    0000004c     timers.obj (.text:ConfigureDistancePulseTimer)
-                  00001dd8    0000004a     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_tos_t2.obj (.text)
-                  00001e22    00000002     --HOLE-- [fill = 0]
-                  00001e24    00000048     uartstdio.obj (.text:UARTwrite)
-                  00001e6c    00000048     driverlib.lib : sysctl.obj (.text:_SysCtlFrequencyGet)
-                  00001eb4    00000048     rtsv7M4_T_le_v4SPD16_eabi.lib : boot.obj (.text)
-                  00001efc    00000044     timers.obj (.text:Timer3IntHandler)
-                  00001f40    00000044     rtsv7M4_T_le_v4SPD16_eabi.lib : cpy_tbl.obj (.text)
-                  00001f84    00000044                                   : exit.obj (.text)
-                  00001fc8    00000042                                   : u_divt2.obj (.text)
-                  0000200a    00000002     --HOLE-- [fill = 0]
-                  0000200c    00000040                                   : signal.obj (.text)
-                  0000204c    00000038                                   : fs_tod_t2.obj (.text)
-                  00002084    00000034                                   : feraiseexcept.obj (.text)
-                  000020b8    00000030                                   : xferaise.obj (.text)
-                  000020e8    0000002e                                   : i_tofd_t2.obj (.text)
-                  00002116    0000002e                                   : raise.obj (.text)
-                  00002144    00000028     timers.obj (.text:delayFiveMicroseconds)
-                  0000216c    00000024     timers.obj (.text:calcLight)
-                  00002190    0000001c     driverlib.lib : sysctl.obj (.text:_SysCtlMemTimingGet)
-                  000021ac    0000001a     uartstdio.obj (.text:UARTprintf)
-                  000021c6    0000001a     rtsv7M4_T_le_v4SPD16_eabi.lib : log.obj (.text)
-                  000021e0    00000018                                   : args_main.obj (.text)
-                  000021f8    00000014                                   : _lock.obj (.text)
-                  0000220c    00000012                                   : copy_zero_init.obj (.text:decompress:ZI)
-                  0000221e    0000000e                                   : copy_decompress_none.obj (.text:decompress:none)
-                  0000222c    00000006     startup_ccs.obj (.text:ResetISR)
-                  00002232    00000006     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_rle.obj (.text:decompress:rle24)
+.text      0    00000200    00002168     
+                  00000200    00000544     timers.obj (.text:UARTSendData)
+                  00000744    000002ec     rtsv7M4_T_le_v4SPD16_eabi.lib : xlog.obj (.text)
+                  00000a30    00000210     timers.obj (.text:main)
+                  00000c40    000001fc     driverlib.lib : sysctl.obj (.text:SysCtlClockFreqSet)
+                  00000e3c    000001ea     uartstdio.obj (.text:UARTvprintf)
+                  00001026    000001b6     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_add_t2.obj (.text)
+                  000011dc    00000160     timers.obj (.text:calcTemp)
+                  0000133c    00000148     rtsv7M4_T_le_v4SPD16_eabi.lib : sqrt.obj (.text)
+                  00001484    00000136                                   : fd_div_t2.obj (.text)
+                  000015ba    00000002     startup_ccs.obj (.text:FaultISR)
+                  000015bc    00000110     rtsv7M4_T_le_v4SPD16_eabi.lib : xdscale.obj (.text)
+                  000016cc    000000fc                                   : fd_mul_t2.obj (.text)
+                  000017c8    000000f4     timers.obj (.text:Timer2IntHandler)
+                  000018bc    000000c4     rtsv7M4_T_le_v4SPD16_eabi.lib : xdnorm.obj (.text)
+                  00001980    0000009c                                   : memcpy_t2.obj (.text)
+                  00001a1c    00000094                                   : auto_init.obj (.text)
+                  00001ab0    0000008c     timers.obj (.text:configureADC)
+                  00001b3c    00000086     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_cmp_t2.obj (.text:__aeabi_cdcmple)
+                  00001bc2    00000002     startup_ccs.obj (.text:IntDefaultHandler)
+                  00001bc4    00000080     timers.obj (.text:Timer1IntHandler)
+                  00001c44    0000007c     timers.obj (.text:Timer0IntHandler)
+                  00001cc0    0000007c     timers.obj (.text:calcProx)
+                  00001d3c    00000064     rtsv7M4_T_le_v4SPD16_eabi.lib : xdunscal.obj (.text)
+                  00001da0    00000060     uartstdio.obj (.text:UARTStdioConfig)
+                  00001e00    0000005e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_rle.obj (.text)
+                  00001e5e    00000002     startup_ccs.obj (.text:NmiSR)
+                  00001e60    0000005c     timers.obj (.text:ConfigureUART)
+                  00001ebc    0000004c     timers.obj (.text:ConfigureDistancePulseTimer)
+                  00001f08    0000004a     rtsv7M4_T_le_v4SPD16_eabi.lib : fd_tos_t2.obj (.text)
+                  00001f52    00000002     --HOLE-- [fill = 0]
+                  00001f54    00000048     uartstdio.obj (.text:UARTwrite)
+                  00001f9c    00000048     driverlib.lib : sysctl.obj (.text:_SysCtlFrequencyGet)
+                  00001fe4    00000048     rtsv7M4_T_le_v4SPD16_eabi.lib : boot.obj (.text)
+                  0000202c    00000044     timers.obj (.text:Timer3IntHandler)
+                  00002070    00000044     rtsv7M4_T_le_v4SPD16_eabi.lib : cpy_tbl.obj (.text)
+                  000020b4    00000044                                   : exit.obj (.text)
+                  000020f8    00000042                                   : u_divt2.obj (.text)
+                  0000213a    00000002     --HOLE-- [fill = 0]
+                  0000213c    00000040                                   : signal.obj (.text)
+                  0000217c    00000038                                   : fs_tod_t2.obj (.text)
+                  000021b4    00000034                                   : feraiseexcept.obj (.text)
+                  000021e8    00000030                                   : xferaise.obj (.text)
+                  00002218    0000002e                                   : i_tofd_t2.obj (.text)
+                  00002246    0000002e                                   : raise.obj (.text)
+                  00002274    00000028     timers.obj (.text:delayFiveMicroseconds)
+                  0000229c    00000024     timers.obj (.text:calcLight)
+                  000022c0    0000001c     driverlib.lib : sysctl.obj (.text:_SysCtlMemTimingGet)
+                  000022dc    0000001a     uartstdio.obj (.text:UARTprintf)
+                  000022f6    0000001a     rtsv7M4_T_le_v4SPD16_eabi.lib : log.obj (.text)
+                  00002310    00000018                                   : args_main.obj (.text)
+                  00002328    00000014                                   : _lock.obj (.text)
+                  0000233c    00000012                                   : copy_zero_init.obj (.text:decompress:ZI)
+                  0000234e    0000000e                                   : copy_decompress_none.obj (.text:decompress:none)
+                  0000235c    00000006     startup_ccs.obj (.text:ResetISR)
+                  00002362    00000006     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_rle.obj (.text:decompress:rle24)
 
-.const     0    00002238    00000230     
-                  00002238    00000120     driverlib.lib : sysctl.obj (.const:g_pppui32XTALtoVCO)
-                  00002358    0000006c                   : sysctl.obj (.const:g_pui32Xtals)
-                  000023c4    00000004     --HOLE-- [fill = 0]
-                  000023c8    00000038     rtsv7M4_T_le_v4SPD16_eabi.lib : xlog.obj (.const:p)
-                  00002400    00000030     driverlib.lib : sysctl.obj (.const:g_sXTALtoMEMTIM)
-                  00002430    0000001c     uartstdio.obj (.const)
-                  0000244c    00000012     uartstdio.obj (.const:.string)
-                  0000245e    00000002     --HOLE-- [fill = 0]
-                  00002460    00000008     driverlib.lib : sysctl.obj (.const)
+.const     0    00002368    00000230     
+                  00002368    00000120     driverlib.lib : sysctl.obj (.const:g_pppui32XTALtoVCO)
+                  00002488    0000006c                   : sysctl.obj (.const:g_pui32Xtals)
+                  000024f4    00000004     --HOLE-- [fill = 0]
+                  000024f8    00000038     rtsv7M4_T_le_v4SPD16_eabi.lib : xlog.obj (.const:p)
+                  00002530    00000030     driverlib.lib : sysctl.obj (.const:g_sXTALtoMEMTIM)
+                  00002560    0000001c     uartstdio.obj (.const)
+                  0000257c    00000012     uartstdio.obj (.const:.string)
+                  0000258e    00000002     --HOLE-- [fill = 0]
+                  00002590    00000008     driverlib.lib : sysctl.obj (.const)
 
-.cinit     0    00002468    00000098     
-                  00002468    0000006f     (.cinit..data.load) [load image, compression = rle]
-                  000024d7    00000001     --HOLE-- [fill = 0]
-                  000024d8    0000000c     (__TI_handler_table)
-                  000024e4    00000004     --HOLE-- [fill = 0]
-                  000024e8    00000008     (.cinit..bss.load) [load image, compression = zero_init]
-                  000024f0    00000010     (__TI_cinit_table)
+.cinit     0    00002598    00000098     
+                  00002598    0000006f     (.cinit..data.load) [load image, compression = rle]
+                  00002607    00000001     --HOLE-- [fill = 0]
+                  00002608    0000000c     (__TI_handler_table)
+                  00002614    00000004     --HOLE-- [fill = 0]
+                  00002618    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  00002620    00000010     (__TI_cinit_table)
 
 .data      0    20000000    000001cc     UNINITIALIZED
                   20000000    000000b0     rtsv7M4_T_le_v4SPD16_eabi.lib : signal.obj (.data:sigtable)
@@ -156,14 +156,14 @@ section   page    origin      length       input sections
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 000024f0 records: 2, size/record: 8, table size: 16
-	.data: load addr=00002468, load size=0000006f bytes, run addr=20000000, run size=000001cc bytes, compression=rle
-	.bss: load addr=000024e8, load size=00000008 bytes, run addr=200001cc, run size=00000158 bytes, compression=zero_init
+__TI_cinit_table @ 00002620 records: 2, size/record: 8, table size: 16
+	.data: load addr=00002598, load size=0000006f bytes, run addr=20000000, run size=000001cc bytes, compression=rle
+	.bss: load addr=00002618, load size=00000008 bytes, run addr=200001cc, run size=00000158 bytes, compression=zero_init
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 000024d8 records: 3, size/record: 4, table size: 12
+__TI_handler_table @ 00002608 records: 3, size/record: 4, table size: 12
 	index: 0, handler: __TI_decompress_rle24
 	index: 1, handler: __TI_decompress_none
 	index: 2, handler: __TI_zero_init
@@ -174,36 +174,36 @@ GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name
 address    name
 --------   ----
 2000019c   B
-00001f85   C$$EXIT
-00001d8d   ConfigureDistancePulseTimer
-00001d31   ConfigureUART
+000020b5   C$$EXIT
+00001ebd   ConfigureDistancePulseTimer
+00001e61   ConfigureUART
 20000198   DENOMINATOR
 200002e4   RTC_Days
 200002e8   RTC_Hours
 200002ec   RTC_Minutes
 200002f0   RTC_Seconds
-0000222d   ResetISR
+0000235d   ResetISR
 UNDEFED    SHT$$INIT_ARRAY$$Base
 UNDEFED    SHT$$INIT_ARRAY$$Limit
-00000b11   SysCtlClockFreqSet
-00001b15   Timer0IntHandler
-00001a95   Timer1IntHandler
-00001699   Timer2IntHandler
-00001efd   Timer3IntHandler
+00000c41   SysCtlClockFreqSet
+00001c45   Timer0IntHandler
+00001bc5   Timer1IntHandler
+000017c9   Timer2IntHandler
+0000202d   Timer3IntHandler
 200002f4   TimerACount
 200002f8   TimerBCount
 200002fc   TimerCCount
 20000300   TimerDCount
 00000201   UARTSendData
-00001c71   UARTStdioConfig
-000021ad   UARTprintf
-00000d0d   UARTvprintf
-00001e25   UARTwrite
+00001da1   UARTStdioConfig
+000022dd   UARTprintf
+00000e3d   UARTvprintf
+00001f55   UARTwrite
 200001a0   VIN
 200000b0   _Denorm
-0000178d   _Dnorm
-0000148d   _Dscale
-00001c0d   _Dunscale
+000018bd   _Dnorm
+000015bd   _Dscale
+00001d3d   _Dunscale
 200000c0   _Eps
 200001c4   _Errno
 20000130   _FDenorm
@@ -215,10 +215,10 @@ UNDEFED    SHT$$INIT_ARRAY$$Limit
 20000190   _FXbig
 20000194   _FZero
 200001b4   _Fenv
-000020b9   _Feraise
+000021e9   _Feraise
 200000d0   _Hugeval
 200000e0   _Inf
-00000615   _Log
+00000745   _Log
 200000f0   _Nan
 20000110   _Rteps
 20000100   _Snan
@@ -228,52 +228,52 @@ UNDEFED    SHT$$INIT_ARRAY$$Limit
 20000424   __STACK_END
 00000100   __STACK_SIZE
 20000424   __STACK_TOP
-000024f0   __TI_CINIT_Base
-00002500   __TI_CINIT_Limit
-000024d8   __TI_Handler_Table_Base
-000024e4   __TI_Handler_Table_Limit
+00002620   __TI_CINIT_Base
+00002630   __TI_CINIT_Limit
+00002608   __TI_Handler_Table_Base
+00002614   __TI_Handler_Table_Limit
 00000001   __TI_args_main
-000018ed   __TI_auto_init
+00001a1d   __TI_auto_init
 200001ac   __TI_cleanup_ptr
-0000221f   __TI_decompress_none
-00002233   __TI_decompress_rle24
+0000234f   __TI_decompress_none
+00002363   __TI_decompress_rle24
 200001b0   __TI_dtors_ptr
 00000000   __TI_static_base__
-0000220d   __TI_zero_init
-00001a0d   __aeabi_cdcmpeq
-00001a0d   __aeabi_cdcmple
-00001dd9   __aeabi_d2f
-00000f01   __aeabi_dadd
-00001355   __aeabi_ddiv
-0000159d   __aeabi_dmul
-00000ef7   __aeabi_dsub
-0000204d   __aeabi_f2d
-000020e9   __aeabi_i2d
-00001851   __aeabi_memcpy
-00001851   __aeabi_memcpy4
-00001851   __aeabi_memcpy8
-00001fc9   __aeabi_uidivmod
+0000233d   __TI_zero_init
+00001b3d   __aeabi_cdcmpeq
+00001b3d   __aeabi_cdcmple
+00001f09   __aeabi_d2f
+00001031   __aeabi_dadd
+00001485   __aeabi_ddiv
+000016cd   __aeabi_dmul
+00001027   __aeabi_dsub
+0000217d   __aeabi_f2d
+00002219   __aeabi_i2d
+00001981   __aeabi_memcpy
+00001981   __aeabi_memcpy4
+00001981   __aeabi_memcpy8
+000020f9   __aeabi_uidivmod
 ffffffff   __binit__
 ffffffff   __c_args__
 20000324   __stack
-000021e1   _args_main
-00001eb5   _c_int00
+00002311   _args_main
+00001fe5   _c_int00
 200001a4   _lock
-00002207   _nop
-000021ff   _register_lock
-000021f9   _register_unlock
+00002337   _nop
+0000232f   _register_lock
+00002329   _register_unlock
 200001a8   _unlock
-00001f89   abort
+000020b9   abort
 20000304   adc_value
 ffffffff   binit
-0000216d   calcLight
-00001b91   calcProx
-000010ad   calcTemp
-00001981   configureADC
-00001f41   copy_in
-00002145   delayFiveMicroseconds
-00001f91   exit
-00002085   feraiseexcept
+0000229d   calcLight
+00001cc1   calcProx
+000011dd   calcTemp
+00001ab1   configureADC
+00002071   copy_in
+00002275   delayFiveMicroseconds
+000020c1   exit
+000021b5   feraiseexcept
 20000308   g_light_index
 00000000   g_pfnVectors
 20000294   g_prox_data
@@ -284,13 +284,13 @@ ffffffff   binit
 20000318   g_ui32PrintFlags
 2000031c   g_ui32PulseLengthTicks
 20000320   g_ui32SysClock
-000021c7   log
-00000901   main
+000022f7   log
+00000a31   main
 200001c8   main_func_sp
-00001851   memcpy
-00002117   raise
-0000200d   signal
-0000120d   sqrt
+00001981   memcpy
+00002247   raise
+0000213d   signal
+0000133d   sqrt
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -302,65 +302,65 @@ address    name
 00000001   __TI_args_main
 00000100   __STACK_SIZE
 00000201   UARTSendData
-00000615   _Log
-00000901   main
-00000b11   SysCtlClockFreqSet
-00000d0d   UARTvprintf
-00000ef7   __aeabi_dsub
-00000f01   __aeabi_dadd
-000010ad   calcTemp
-0000120d   sqrt
-00001355   __aeabi_ddiv
-0000148d   _Dscale
-0000159d   __aeabi_dmul
-00001699   Timer2IntHandler
-0000178d   _Dnorm
-00001851   __aeabi_memcpy
-00001851   __aeabi_memcpy4
-00001851   __aeabi_memcpy8
-00001851   memcpy
-000018ed   __TI_auto_init
-00001981   configureADC
-00001a0d   __aeabi_cdcmpeq
-00001a0d   __aeabi_cdcmple
-00001a95   Timer1IntHandler
-00001b15   Timer0IntHandler
-00001b91   calcProx
-00001c0d   _Dunscale
-00001c71   UARTStdioConfig
-00001d31   ConfigureUART
-00001d8d   ConfigureDistancePulseTimer
-00001dd9   __aeabi_d2f
-00001e25   UARTwrite
-00001eb5   _c_int00
-00001efd   Timer3IntHandler
-00001f41   copy_in
-00001f85   C$$EXIT
-00001f89   abort
-00001f91   exit
-00001fc9   __aeabi_uidivmod
-0000200d   signal
-0000204d   __aeabi_f2d
-00002085   feraiseexcept
-000020b9   _Feraise
-000020e9   __aeabi_i2d
-00002117   raise
-00002145   delayFiveMicroseconds
-0000216d   calcLight
-000021ad   UARTprintf
-000021c7   log
-000021e1   _args_main
-000021f9   _register_unlock
-000021ff   _register_lock
-00002207   _nop
-0000220d   __TI_zero_init
-0000221f   __TI_decompress_none
-0000222d   ResetISR
-00002233   __TI_decompress_rle24
-000024d8   __TI_Handler_Table_Base
-000024e4   __TI_Handler_Table_Limit
-000024f0   __TI_CINIT_Base
-00002500   __TI_CINIT_Limit
+00000745   _Log
+00000a31   main
+00000c41   SysCtlClockFreqSet
+00000e3d   UARTvprintf
+00001027   __aeabi_dsub
+00001031   __aeabi_dadd
+000011dd   calcTemp
+0000133d   sqrt
+00001485   __aeabi_ddiv
+000015bd   _Dscale
+000016cd   __aeabi_dmul
+000017c9   Timer2IntHandler
+000018bd   _Dnorm
+00001981   __aeabi_memcpy
+00001981   __aeabi_memcpy4
+00001981   __aeabi_memcpy8
+00001981   memcpy
+00001a1d   __TI_auto_init
+00001ab1   configureADC
+00001b3d   __aeabi_cdcmpeq
+00001b3d   __aeabi_cdcmple
+00001bc5   Timer1IntHandler
+00001c45   Timer0IntHandler
+00001cc1   calcProx
+00001d3d   _Dunscale
+00001da1   UARTStdioConfig
+00001e61   ConfigureUART
+00001ebd   ConfigureDistancePulseTimer
+00001f09   __aeabi_d2f
+00001f55   UARTwrite
+00001fe5   _c_int00
+0000202d   Timer3IntHandler
+00002071   copy_in
+000020b5   C$$EXIT
+000020b9   abort
+000020c1   exit
+000020f9   __aeabi_uidivmod
+0000213d   signal
+0000217d   __aeabi_f2d
+000021b5   feraiseexcept
+000021e9   _Feraise
+00002219   __aeabi_i2d
+00002247   raise
+00002275   delayFiveMicroseconds
+0000229d   calcLight
+000022dd   UARTprintf
+000022f7   log
+00002311   _args_main
+00002329   _register_unlock
+0000232f   _register_lock
+00002337   _nop
+0000233d   __TI_zero_init
+0000234f   __TI_decompress_none
+0000235d   ResetISR
+00002363   __TI_decompress_rle24
+00002608   __TI_Handler_Table_Base
+00002614   __TI_Handler_Table_Limit
+00002620   __TI_CINIT_Base
+00002630   __TI_CINIT_Limit
 200000b0   _Denorm
 200000c0   _Eps
 200000d0   _Hugeval
