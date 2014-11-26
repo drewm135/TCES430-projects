@@ -72,6 +72,15 @@
 //
 //*****************************************************************************
 
+// Constants for ultrasonic ranger
+#define TIMER4_TAMR_R           (*((volatile uint32_t *)0x40034004))
+#define TIMER4_RIS_R            (*((volatile uint32_t *)0x4003401C))
+#define TIMER4_TAR_R            (*((volatile uint32_t *)0x40034048))
+#define TIMER4_TAV_R            (*((volatile uint32_t *)0x40034050))
+#define TIMER4_ICR_R            (*((volatile uint32_t *)0x40034024))
+
+#define SOUND_CM_PER_S 34326
+
 //Math Constants
 float DENOMINATOR = 0.000001790830963;
 
@@ -92,12 +101,12 @@ uint32_t g_ui32SysClock;
 // on the UART.
 //
 //*****************************************************************************
-uint32_t g_ui32InterruptFlags; //Bit 0 = Thermistor value read
+volatile uint32_t g_ui32InterruptFlags; //Bit 0 = Thermistor value read
                                //Bit 1 = Proximity value read
                                //Bit 2 = Light value read
                                //Bits 3-31 = Not Used
 
-uint32_t g_ui32PrintFlags;     //Bit 0 = Timer ready to print
+volatile uint32_t g_ui32PrintFlags;     //Bit 0 = Timer ready to print
                                //Bit 1 = Thermister data ready to print
                                //Bit 2 = Proximity data ready to print
                                //Bit 3 = Light data ready to print
@@ -114,13 +123,13 @@ uint32_t TimerDCount;
 // Real Time Clock days, hours, minutes, and seconds
 //
 //*****************************************************************************
-uint32_t RTC_Days;
+volatile uint32_t RTC_Days;
 
-uint32_t RTC_Hours;
+volatile uint32_t RTC_Hours;
 
-uint32_t RTC_Minutes;
+volatile uint32_t RTC_Minutes;
 
-uint32_t RTC_Seconds;
+volatile uint32_t RTC_Seconds;
 
 //*****************************************************************************
 //
@@ -128,6 +137,8 @@ uint32_t RTC_Seconds;
 //
 //*****************************************************************************
 uint32_t adc_value[1]; //Sequencer 3 has a FIFO of size 1
+
+volatile uint32_t g_ui32PulseLengthTicks; // Length of ultrasonic echo pulse in system clock ticks
 
 //*****************************************************************************
 //
@@ -162,6 +173,24 @@ __error__(char *pcFilename, uint32_t ui32Line)
 {
 }
 #endif
+
+//*****************************************************************************
+//
+// Delay for 5 us.
+//
+//*****************************************************************************
+void delayFiveMicroseconds(uint32_t g_ui32SysClock) {
+	//
+	// Delay for 5 us. The value of the number provided to SysCtlDelay
+	// is the number of loops (3 assembly instructions each) to iterate through.
+	// Interrupts are disabled temporarily to ensure the pulse length is 5us.
+	//
+	ROM_IntMasterDisable();
+
+	ROM_SysCtlDelay(g_ui32SysClock / 3 / 200000);
+
+	ROM_IntMasterEnable();
+}
 
 //*****************************************************************************
 //
@@ -257,30 +286,121 @@ Timer1IntHandler(void)
 void
 Timer2IntHandler(void)
 {
-    //
-    // Clear the timer interrupt.
-    //
-    ROM_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+	//
+	// Clear the timer interrupt.
+	//
+	ROM_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
 
-    //Increment Timer A Count
-    TimerCCount++;
+	//Increment Timer A Count
+	TimerCCount++;
 
-    /*//
+	uint32_t ui32PulseStartTime; // Timer value at echo pulse rising edge
+	uint32_t ui32PulseStopTime; // Timer value at echo pulse falling edge
+
+	// // // Send a trigger pulse \\ \\ \\
+
+	//
+	// Enable the GPIO pin for the trigger pulse (M4).
+	//
+	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTM_BASE, GPIO_PIN_4);
+
+	//
+	// Turn on pulse.
+	//
+	MAP_GPIOPinWrite(GPIO_PORTM_BASE, GPIO_PIN_4, GPIO_PIN_4);
+
+	//
+	// Delay for 5 us.
+	//
+	delayFiveMicroseconds(g_ui32SysClock);
+
+	//
+	// Turn off pulse.
+	//
+	MAP_GPIOPinWrite(GPIO_PORTM_BASE, GPIO_PIN_4, 0);
+
+
+	// // // Measure pulse length \\ \\ \\
+
+	//
+	// Clear Timer A capture flag
+	//
+	TIMER4_ICR_R |= (1 << 2);
+
+	//
+	// Enable GPIO pin for timer event capture (M4).
+	//
+	ROM_GPIOPinTypeTimer(GPIO_PORTM_BASE, GPIO_PIN_4);
+
+	//
+	// Configure PM4 as Timer 4 CCP0
+	//
+	ROM_GPIOPinConfigure(GPIO_PM4_T4CCP0);
+
+	//
+	// Start Timer4 A
+	//
+	ROM_TimerEnable(TIMER4_BASE, TIMER_A);
+
+	//
+	// Wait for first capture event
+	//
+	while((TIMER4_RIS_R & (0x1 << 2)) == 0){};
+
+	//
+	// After first event, save timer A's captured value.
+	//
+	ui32PulseStartTime = TIMER4_TAR_R;
+
+	//
+	// Clear Timer A capture flag
+	//
+	TIMER4_ICR_R |= (1 << 2);
+
+	//
+	// Wait for second capture event
+	//
+	while((TIMER4_RIS_R & (0x1 << 2)) == 0){};
+
+	//
+	// After second event, save timer A's captured value.
+	//
+	ui32PulseStopTime = TIMER4_TAR_R;
+
+	//
+	// Calculate length of the pulse by subtracting the two timer values.
+	// Note that even if stop time is less than start time, due to the
+	// timer overflowing and starting over at 0, the 24 LSBs of our result are
+	// still valid
+	//
+	g_ui32PulseLengthTicks = (ui32PulseStopTime - ui32PulseStartTime) & 0x0FFFFFF;
+
+	//
+	// Print the start time, stop time, and pulse length
+	//
+	//	UARTprintf("Pulse length: %d - %d = %d\n", ui32PulseStopTime,
+	//		ui32PulseStartTime, ui32PulseLengthTicks);
+
+	//
+	// Print the distance
+	//
+	//UARTprintf("Distance: %d\n", ui32DistanceCM);
+
+	//
+	// Stop Timer4 A.
+	//
+	ROM_TimerDisable(TIMER4_BASE, TIMER_A);
+
+
+	/*//
     // Use the flags to Toggle the LED for this timer
     //
     GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, g_ui32Flags);*/
 
-    //
-    // Toggle the flag for the proximity timer.
-    //
-    HWREGBITW(&g_ui32InterruptFlags, 1) = 1;
-
-    //
-    // Update the interrupt status.
-    //
-    ROM_IntMasterDisable();
-    //UARTprintf("\rT1: %d  T2: %d  T3: %d  T4: %d", TimerACount, TimerBCount, TimerCCount, TimerDCount);
-    ROM_IntMasterEnable();
+	//
+	// Toggle the flag for the proximity timer.
+	//
+	HWREGBITW(&g_ui32InterruptFlags, 1) = 1;
 }
 
 //*****************************************************************************
@@ -371,9 +491,30 @@ calcTemp()
 void
 calcProx()
 {     //Calculates Proximity reading
+	uint32_t ui32DistanceCM; // Sensor output converted to centimeters
 	if (HWREGBITW(&g_ui32InterruptFlags, 1)) { //Proximity reading is ready
 		HWREGBITW(&g_ui32InterruptFlags, 1) = 0; //Reset flag
 		//UARTprintf("Proximity was read!\n");
+		//
+		// pulse length / system clock = pulse length in seconds
+		// pulse length in seconds / (1 / sound speed cm per s) = total wave flight distance
+		// total distance / 2 = distance from sensor
+		//
+		ui32DistanceCM = g_ui32PulseLengthTicks / 2 / (g_ui32SysClock / SOUND_CM_PER_S);
+		//UARTprintf("\033[2J\nProx data = %d\n", ui32DistanceCM);
+
+		g_prox_data[g_prox_index] = ui32DistanceCM;
+		g_prox_index++; //Increase index
+		if (g_prox_index == 20) {
+			g_prox_index = 0;
+			HWREGBITW(&g_ui32PrintFlags, 2) = 1; //Set print flag
+		}
+		//Update 7Seg LED
+
+		//TODO
+
+
+		//UARTprintf("Distance (cm) = %d\n", ui32DistanceCM); //Print out temp in Fahrenheit (For DEBUG)
 	}
 }
 
@@ -395,6 +536,13 @@ UARTSendData()
 	float min_temp = 5000;
 	float max_temp = 0;
 	float std_dev_temp;
+
+	float    avg_prox;
+	uint32_t min_prox = 5000;
+	uint32_t max_prox = 0;
+	float    std_dev_prox;
+
+
 	if (HWREGBITW(&g_ui32PrintFlags, 0)) { //Clock reading is ready
 		HWREGBITW(&g_ui32PrintFlags, 0) = 0; //Reset flag
 	    ROM_IntMasterDisable();
@@ -418,7 +566,7 @@ UARTSendData()
 		//std_dev_temp = std_dev_temp * 100;
 
 		ROM_IntMasterDisable();
-		UARTprintf("\n\n+------------------------------------------------------------------------+\n");
+		/*UARTprintf("\n\n+------------------------------------------------------------------------+\n");
 		UARTprintf(    "|                                 Temperature                            |\n");
 		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
 		UARTprintf(    "|       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
@@ -428,17 +576,48 @@ UARTSendData()
 				(uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100,
 				(uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100,
 				(uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
-		UARTprintf(    "+------------------+-------------------+------------------+--------------+");
+		UARTprintf(    "+------------------+-------------------+------------------+--------------+");*/
+		UARTprintf("\033[3;1HMin       Temp = %d.%02d\n", (uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100);
+		UARTprintf("Max       Temp = %d.%02d\n", (uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100);
+		UARTprintf("Mean      Temp = %d.%02d\n", (uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100);
+		UARTprintf("Std. Dev. Temp = %d.%03d"  , (uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
+		//UARTFlushTx(true);
+
 		ROM_IntMasterEnable();
 
+
 	}
+	//ROM_SysCtlDelay(g_ui32SysClock / 3 / 400000); //Delay for 2us
 	if (HWREGBITW(&g_ui32PrintFlags, 2)) { //Proximity readings are ready
 		HWREGBITW(&g_ui32PrintFlags, 2) = 0; //Reset flag
 		//Print proximity data
 
+		for (i = 0; i < 20; i++) { //Calculate min, max, and mean
+			avg_prox += g_prox_data[i];
+			min_prox = g_prox_data[i] < min_prox ? g_prox_data[i] : min_prox;
+			max_prox = g_prox_data[i] > max_prox ? g_prox_data[i] : max_prox;
+		}
+		avg_prox = (float) avg_prox / 20;
+		for (i = 0; i < 20; i++) { //Calculate standard deviation
+			std_dev_prox += ((float) g_prox_data[i] - avg_prox) * ((float) g_prox_data[i] - avg_prox);
+		}
+		std_dev_prox = std_dev_prox / 20;
+		std_dev_prox = sqrt(std_dev_prox);
+
+		ROM_IntMasterDisable();
+		UARTprintf("\033[11;1H\033[0JMin       Prox = %d\n", min_prox);
+		UARTprintf("Max       Prox = %d\n", max_prox);
+		UARTprintf("Mean      Prox = %d.%02d\n", (uint32_t) avg_prox, (uint32_t) ((int) (avg_prox * 100) % (int) avg_prox * 100) / 100);
+		UARTprintf("Std. Dev. Prox = %d.%03d"  , (uint32_t) std_dev_prox, (uint32_t) ((int) (std_dev_prox * 100) % (int) std_dev_prox * 100) / 100);
+		//UARTprintf("\033[11;1H\033[0JProx Reading 0 = %d\n", g_prox_data[0]);
+		//for (i = 1; i < 20; i++) {
+			//UARTprintf("Prox reading %d = %d\n", i, g_prox_data[i]);
+		//}
+
+		ROM_IntMasterEnable();
 	}
-	if (HWREGBITW(&g_ui32PrintFlags, 1)) { //light readings are ready
-		HWREGBITW(&g_ui32PrintFlags, 1) = 0; //Reset flag
+	if (HWREGBITW(&g_ui32PrintFlags, 3)) { //light readings are ready
+		HWREGBITW(&g_ui32PrintFlags, 3) = 0; //Reset flag
 		//Print light data
 
 	}
@@ -468,6 +647,37 @@ configureADC()
 
 //*****************************************************************************
 //
+// Configure the timer and its pins for measuring the length of
+// ultrasonic sensor echo pulse.
+//
+//*****************************************************************************
+void ConfigureDistancePulseTimer()
+{
+	//
+	// Enable Timer 4
+	//
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4);
+
+	//
+	// Configure timer 4A as a 16-bit event capture up-counter
+	//
+	ROM_TimerConfigure(TIMER4_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_TIME_UP);
+
+	//
+	// Set prescaler to 255. This essentially makes
+	// the 16-bit timer a 24-bit timer.
+	//
+	ROM_TimerPrescaleSet(TIMER4_BASE, TIMER_A, 0xFF);
+
+	//
+	// The timer should capture events on both rising and falling edges
+	//
+	ROM_TimerControlEvent(TIMER4_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES);
+
+}
+
+//*****************************************************************************
+//
 // This example application demonstrates the use of the timers to generate
 // periodic interrupts.
 //
@@ -483,8 +693,28 @@ main(void)
                                              SYSCTL_USE_PLL |
                                              SYSCTL_CFG_VCO_480), 120000000);
 
+
+
+	// Setup for ultrasonic ranger
+
+	//
+	// Enable GPIO M
+	//
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
+
+	//
+	// Enable GPIO pin for timer event capture (M4).
+	//
+	ROM_GPIOPinTypeTimer(GPIO_PORTM_BASE, GPIO_PIN_4);
+
+	//
+	// Initialize timer for distance pulse measurement.
+	//
+	ConfigureDistancePulseTimer();
+
     ROM_FPULazyStackingEnable(); //Enable lazy stacking for faster FPU performance
     ROM_FPUEnable(); //Enable FPU
+
 
     TimerACount = 0;
     TimerBCount = 0;
