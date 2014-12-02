@@ -57,6 +57,7 @@
 #include "utils/uartstdio.h"
 
 
+
 //*****************************************************************************
 //
 //! \addtogroup example_list
@@ -94,6 +95,10 @@ int VIN = 5;
 //
 //****************************************************************************
 uint32_t g_ui32SysClock;
+
+// Light input capture declarations
+uint32_t Timer;
+uint32_t loopCount;
 
 //*****************************************************************************
 //
@@ -416,13 +421,15 @@ Timer3IntHandler(void)
     //
     ROM_TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
 
-    //Increment Timer A Count
-    TimerDCount++;
 
-    /*//
-    // Use the flags to Toggle the LED for this timer
-    //
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, g_ui32Flags);*/
+
+	// Get the timer value and reset it
+	ROM_TimerDisable(TIMER5_BASE, TIMER_A);
+	// Get the timer value
+	Timer = ROM_TimerValueGet(TIMER5_BASE, TIMER_A);
+	// Reset the timer value to 65000
+	ROM_TimerLoadSet(TIMER5_BASE, TIMER_A, 65000); // Timer5
+	ROM_TimerEnable(TIMER5_BASE, TIMER_A);
 
     //
     // Toggle the flag for the light timer.
@@ -523,7 +530,14 @@ calcLight()
 {    //Calculates Light reading
 	if (HWREGBITW(&g_ui32InterruptFlags, 2)) { //Light reading is ready
 		HWREGBITW(&g_ui32InterruptFlags, 2) = 0; //Reset flag
-		//UARTprintf("Light was read!\n");
+		uint32_t Freq; // The frequency
+		Freq = (65000-Timer)*10; // Freq = Counts/second. Multiplied by 10 is the same as divided by 0.1second
+		g_light_data[g_light_index] = Freq;
+		g_light_index++;
+		if (g_light_index == 100) {
+			g_light_index = 0;
+			HWREGBITW(&g_ui32PrintFlags, 3) = 1; //Set print flag
+		}
 	}
 }
 
@@ -541,6 +555,11 @@ UARTSendData()
 	uint32_t min_prox = 5000;
 	uint32_t max_prox = 0;
 	float    std_dev_prox;
+
+	float    avg_light;
+	uint32_t min_light = 500000;
+	uint32_t max_light = 0;
+	float    std_dev_light;
 
 
 	if (HWREGBITW(&g_ui32PrintFlags, 0)) { //Clock reading is ready
@@ -615,17 +634,29 @@ UARTSendData()
 		UARTprintf("Max       Prox = %d\n", max_prox);
 		UARTprintf("Mean      Prox = %d.%02d\n", (uint32_t) avg_prox, (uint32_t) ((int) (avg_prox * 100) % (int) avg_prox * 100) / 100);
 		UARTprintf("Std. Dev. Prox = %d.%03d"  , (uint32_t) std_dev_prox, (uint32_t) ((int) (std_dev_prox * 100) % (int) std_dev_prox * 100) / 100);
-		//UARTprintf("\033[11;1H\033[0JProx Reading 0 = %d\n", g_prox_data[0]);
-		//for (i = 1; i < 20; i++) {
-			//UARTprintf("Prox reading %d = %d\n", i, g_prox_data[i]);
-		//}
-
 		ROM_IntMasterEnable();
 	}
 	if (HWREGBITW(&g_ui32PrintFlags, 3)) { //light readings are ready
 		HWREGBITW(&g_ui32PrintFlags, 3) = 0; //Reset flag
 		//Print light data
+		for (i = 0; i < 100; i++) { //Calculate min, max, and mean
+					avg_light += g_light_data[i];
+					min_light = g_light_data[i] < min_light ? g_light_data[i] : min_light;
+					max_light = g_light_data[i] > max_light ? g_light_data[i] : max_light;
+		}
+		avg_light = (float) avg_light / 100;
+		for (i = 0; i < 100; i++) { //Calculate standard deviation
+			std_dev_light += ((float) g_light_data[i] - avg_light) * ((float) g_light_data[i] - avg_light);
+		}
+		std_dev_light = std_dev_light / 100;
+		std_dev_light = sqrt(std_dev_light);
 
+		ROM_IntMasterDisable();
+		UARTprintf("\033[16;1H\033[0JMin       Light = %d\n", min_light);
+		UARTprintf("Max       Light = %d\n", max_light);
+		UARTprintf("Mean      Light = %d.%02d\n", (uint32_t) avg_light, (uint32_t) ((int) (avg_light * 100) % (int) avg_light * 100) / 100);
+		UARTprintf("Std. Dev. Light = %d.%03d"  , (uint32_t) std_dev_light, (uint32_t) ((int) (std_dev_light * 100) % (int) std_dev_light * 100) / 100);
+		ROM_IntMasterEnable();
 	}
 
 
@@ -749,6 +780,19 @@ main(void)
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); //Proximity
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); //Light
 
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER5); //Timer5 is used to measure the leading edge pulses from the signal generator
+
+	// Enable the A peripheral used by the Timer3 pin PA6, PA7
+	// Enable the B peripheral used by the Timer5 pin PB2, PB3
+	//	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); //Enable GPIO A
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); //Enable GPIO B
+
+	//Configure the pins for its Timer functionality
+	ROM_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_2); //Enable Timer5 on PB2
+
+	//Configures the alternate function of a GPIO pin for Timer5
+	ROM_GPIOPinConfigure(GPIO_PB2_T5CCP0);
+
     //
     // Enable processor interrupts.
     //
@@ -761,12 +805,16 @@ main(void)
     ROM_TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
     ROM_TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     ROM_TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
+    ROM_TimerConfigure(TIMER5_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_COUNT); // Timer5
+
     ROM_TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 10); //RTC       100ms
     ROM_TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 5);  //Temp      200ms
     ROM_TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock / 2);  //Proximity 500ms
     ROM_TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock / 10); //Light     100ms
+    ROM_TimerLoadSet(TIMER5_BASE, TIMER_A, 65000); // Timer5
 
-
+    //Configure the signal edges that triggers the timer when in capture mode
+    ROM_TimerControlEvent(TIMER5_BASE, TIMER_A, TIMER_EVENT_POS_EDGE);
 
     //
     // Setup the interrupts for the timer timeouts.
@@ -787,6 +835,7 @@ main(void)
     ROM_TimerEnable(TIMER1_BASE, TIMER_A); //Temp
     ROM_TimerEnable(TIMER2_BASE, TIMER_A); //Proximity
     ROM_TimerEnable(TIMER3_BASE, TIMER_A); //Light
+    ROM_TimerEnable(TIMER5_BASE, TIMER_A); //Timer5
 
     //
     // Loop forever while the timers run.
