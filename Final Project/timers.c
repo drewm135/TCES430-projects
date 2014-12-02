@@ -56,6 +56,7 @@
 #include "driverlib/uart.h"
 #include "utils/uartstdio.h"
 
+#include "seven_segment_driver.h"
 
 
 //*****************************************************************************
@@ -81,6 +82,7 @@
 #define TIMER4_ICR_R            (*((volatile uint32_t *)0x40034024))
 
 #define SOUND_CM_PER_S 34326
+#define SENSOR_MAX_DISTANCE 302
 
 //Math Constants
 float DENOMINATOR = 0.000001790830963;
@@ -510,6 +512,12 @@ calcProx()
 		ui32DistanceCM = g_ui32PulseLengthTicks / 2 / (g_ui32SysClock / SOUND_CM_PER_S);
 		//UARTprintf("\033[2J\nProx data = %d\n", ui32DistanceCM);
 
+		uint32_t digit = ui32DistanceCM * 15 / SENSOR_MAX_DISTANCE;
+		if (digit > 15)
+			digit = 15;
+
+		displayDigit(digit);
+
 		g_prox_data[g_prox_index] = ui32DistanceCM;
 		g_prox_index++; //Increase index
 		if (g_prox_index == 20) {
@@ -599,11 +607,11 @@ UARTSendData()
 
 
 
-		UARTprintf("\033[3;1H+-----------------+------------------+-------------------+------------------+--------------+\n");
-		UARTprintf("|      Sensor     |       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
-		UARTprintf("+-----------------+------------------+-------------------+------------------+--------------+\n");
+		//UARTprintf("\033[3;1H+-----------------+------------------+-------------------+------------------+--------------+\n");
+		//UARTprintf("|      Sensor     |       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
+		//UARTprintf("+-----------------+------------------+-------------------+------------------+--------------+\n");
 
-		UARTprintf("Min       Temp = %d.%02d\n", (uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100);
+		UARTprintf("\033[6;1HMin       Temp = %d.%02d\n", (uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100);
 		UARTprintf("Max       Temp = %d.%02d\n", (uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100);
 		UARTprintf("Mean      Temp = %d.%02d\n", (uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100);
 		UARTprintf("Std. Dev. Temp = %d.%03d"  , (uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
@@ -630,7 +638,7 @@ UARTSendData()
 		std_dev_prox = sqrt(std_dev_prox);
 
 		ROM_IntMasterDisable();
-		UARTprintf("\033[11;1H\033[0JMin       Prox = %d\n", min_prox);
+		UARTprintf("\033[11;1HMin       Prox = %d\n", min_prox);
 		UARTprintf("Max       Prox = %d\n", max_prox);
 		UARTprintf("Mean      Prox = %d.%02d\n", (uint32_t) avg_prox, (uint32_t) ((int) (avg_prox * 100) % (int) avg_prox * 100) / 100);
 		UARTprintf("Std. Dev. Prox = %d.%03d"  , (uint32_t) std_dev_prox, (uint32_t) ((int) (std_dev_prox * 100) % (int) std_dev_prox * 100) / 100);
@@ -743,6 +751,11 @@ main(void)
 	// Enable GPIO pin for timer event capture (M4).
 	//
 	ROM_GPIOPinTypeTimer(GPIO_PORTM_BASE, GPIO_PIN_4);
+
+	//
+	// Configure 7 segment display gpio pins
+	//
+	sevenSegSetup();
 
 	//
 	// Initialize timer for distance pulse measurement.

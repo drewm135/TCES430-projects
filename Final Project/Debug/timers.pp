@@ -26,6 +26,7 @@ timers.obj: C:/ti/TivaWare_C_Series-2.1.0.12573/driverlib/timer.h
 timers.obj: C:/ti/TivaWare_C_Series-2.1.0.12573/driverlib/uart.h
 timers.obj: C:/ti/TivaWare_C_Series-2.1.0.12573/utils/uartstdio.h
 timers.obj: c:/ti/ccsv6/tools/compiler/arm_5.1.8/include/stdarg.h
+timers.obj: ../seven_segment_driver.h
 
 ../timers.c: 
 c:/ti/ccsv6/tools/compiler/arm_5.1.8/include/stdint.h: 
@@ -53,3 +54,4 @@ C:/ti/TivaWare_C_Series-2.1.0.12573/driverlib/timer.h:
 C:/ti/TivaWare_C_Series-2.1.0.12573/driverlib/uart.h: 
 C:/ti/TivaWare_C_Series-2.1.0.12573/utils/uartstdio.h: 
 c:/ti/ccsv6/tools/compiler/arm_5.1.8/include/stdarg.h: 
+../seven_segment_driver.h: 

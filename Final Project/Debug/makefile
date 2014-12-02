@@ -8,6 +8,7 @@ CG_TOOL_ROOT := c:/ti/ccsv6/tools/compiler/arm_5.1.8
 
 ORDERED_OBJS += \
 $(GEN_CMDS__FLAG) \
+"./seven_segment_driver.obj" \
 "./startup_ccs.obj" \
 "./timers.obj" \
 "./utils/uartstdio.obj" \
@@ -146,8 +147,8 @@ Final\ Project.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)$(BIN_OUTPUTS__QUOTED)
-	-$(RM) "startup_ccs.pp" "timers.pp" "utils\uartstdio.pp" 
-	-$(RM) "startup_ccs.obj" "timers.obj" "utils\uartstdio.obj" 
+	-$(RM) "seven_segment_driver.pp" "startup_ccs.pp" "timers.pp" "utils\uartstdio.pp" 
+	-$(RM) "seven_segment_driver.obj" "startup_ccs.obj" "timers.obj" "utils\uartstdio.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
