@@ -1,15 +1,9 @@
-//Drew, Thinh, Fahad, Keith
-
 /*
- * Timer 0 = Real Time Clock
- * Timer 1 = Thermistor Read (200 ms)
- * Timer 2 = Proximity Read  (500 ms)
- * Timer 3 = Light Read      (100 ms)
+ * Thinh Le, Keith Lueneburg, Drew (Seth) May, Fahad Muzaffar
+ * TCES 430
+ * Autumn 2014
+ * Final Project
  */
-
-
-
-
 
 //*****************************************************************************
 //
@@ -61,20 +55,21 @@
 
 //*****************************************************************************
 //
-//! \addtogroup example_list
-//! <h1>Timer (timers)</h1>
-//!
-//! This example application demonstrates the use of the timers to generate
-//! periodic interrupts.  One timer is set up to interrupt once per second and
-//! the other to interrupt twice per second; each interrupt handler will toggle
-//! its own indicator throught the UART.
-//!
 //! UART0, connected to the Virtual Serial Port and running at 115,200, 8-N-1,
 //! is used to display messages from this application.
+//!
+//! This examples reads data from three sensors, a proximity sensor, light
+//! sensor, and thermistor and records 10 seconds worth of data from each
+//! sensor. Then every 10 seconds the data is formatted and outputted through
+//! the Virtual Serial Port.
 //
 //*****************************************************************************
 
+//*****************************************************************************
+//
 // Constants for ultrasonic ranger
+//
+//*****************************************************************************
 #define TIMER4_TAMR_R           (*((volatile uint32_t *)0x40034004))
 #define TIMER4_RIS_R            (*((volatile uint32_t *)0x4003401C))
 #define TIMER4_TAR_R            (*((volatile uint32_t *)0x40034048))
@@ -84,7 +79,11 @@
 #define SOUND_CM_PER_S 34326
 #define SENSOR_MAX_DISTANCE 302
 
-//Math Constants
+//****************************************************************************
+//
+// Math Constants for Thermistor
+//
+//****************************************************************************
 float DENOMINATOR = 0.000001790830963;
 
 int B = 3950;
@@ -98,33 +97,29 @@ int VIN = 5;
 //****************************************************************************
 uint32_t g_ui32SysClock;
 
+//****************************************************************************
+//
 // Light input capture declarations
+//
+//****************************************************************************
 uint32_t Timer;
 uint32_t loopCount;
 
-//*****************************************************************************
+//****************************************************************************
 //
 // Flags that contain the current value of the interrupt indicator as displayed
 // on the UART.
 //
-//*****************************************************************************
+//****************************************************************************
 volatile uint32_t g_ui32InterruptFlags; //Bit 0 = Thermistor value read
-                               //Bit 1 = Proximity value read
-                               //Bit 2 = Light value read
-                               //Bits 3-31 = Not Used
+                                        //Bit 1 = Proximity value read
+                                        //Bit 2 = Light value read
+                                        //Bits 3-31 = Not Used
 
 volatile uint32_t g_ui32PrintFlags;     //Bit 0 = Timer ready to print
-                               //Bit 1 = Thermister data ready to print
-                               //Bit 2 = Proximity data ready to print
-                               //Bit 3 = Light data ready to print
-uint32_t TimerACount;
-
-uint32_t TimerBCount;
-
-uint32_t TimerCCount;
-
-uint32_t TimerDCount;
-
+                                        //Bit 1 = Thermister data ready to print
+                                        //Bit 2 = Proximity data ready to print
+                                        //Bit 3 = Light data ready to print
 //*****************************************************************************
 //
 // Real Time Clock days, hours, minutes, and seconds
@@ -213,24 +208,12 @@ Timer0IntHandler(void)
     //
     ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 
-    //Increment Timer A Count
-    TimerACount++;
-    RTC_Seconds = (TimerACount / 10);
-    RTC_Minutes = (RTC_Seconds / 60);
-    RTC_Hours   = (RTC_Minutes / 60);
-    RTC_Days    = RTC_Hours   / 24;
+    RTC_Seconds = (TimerACount / 10); //Time in seconds
+    RTC_Minutes = (RTC_Seconds / 60); //Time in minutes
+    RTC_Hours   = (RTC_Minutes / 60); //Time in hours
+    RTC_Days    = RTC_Hours   / 24;   //Time in days
 
-    HWREGBITW(&g_ui32PrintFlags, 0) = 1;
-
-    /*//
-    // Use the flags to Toggle the LED for this timer
-    //
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, g_ui32Flags);*/
-
-    //
-    // Update the interrupt status.
-    //
-
+    HWREGBITW(&g_ui32PrintFlags, 0) = 1; //Set print flag
 }
 
 //*****************************************************************************
@@ -241,8 +224,6 @@ Timer0IntHandler(void)
 void
 Timer1IntHandler(void)
 {
-
-
     //
     // Clear the timer interrupt.
     //
@@ -252,14 +233,6 @@ Timer1IntHandler(void)
     // Clear ADC interrupt
     //
     ROM_ADCIntClear(ADC0_BASE, 3);
-
-    //Increment Timer A Count
-    TimerBCount++;
-
-    /*//
-    // Use the flags to Toggle the LED for this timer
-    //
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, g_ui32Flags);*/
 
     //
     // Toggle the flag for the temperature timer.
@@ -277,12 +250,7 @@ Timer1IntHandler(void)
     while(!ROM_ADCIntStatus(ADC0_BASE, 3, false)) { //Wait for ADC to finish sampling
     }
 	ROM_ADCSequenceDataGet(ADC0_BASE, 3, adc_value); //Get data from Sequencer 3
-    //
-    // Update the interrupt status.
-    //
-    //ROM_IntMasterDisable();
-    //UARTprintf("ADC Value = %d\n", adc_value[0]); //Print out the first (and only) value
-    //ROM_IntMasterEnable();
+
 }
 
 //*****************************************************************************
@@ -297,9 +265,6 @@ Timer2IntHandler(void)
 	// Clear the timer interrupt.
 	//
 	ROM_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
-
-	//Increment Timer A Count
-	TimerCCount++;
 
 	uint32_t ui32PulseStartTime; // Timer value at echo pulse rising edge
 	uint32_t ui32PulseStopTime; // Timer value at echo pulse falling edge
@@ -383,26 +348,9 @@ Timer2IntHandler(void)
 	g_ui32PulseLengthTicks = (ui32PulseStopTime - ui32PulseStartTime) & 0x0FFFFFF;
 
 	//
-	// Print the start time, stop time, and pulse length
-	//
-	//	UARTprintf("Pulse length: %d - %d = %d\n", ui32PulseStopTime,
-	//		ui32PulseStartTime, ui32PulseLengthTicks);
-
-	//
-	// Print the distance
-	//
-	//UARTprintf("Distance: %d\n", ui32DistanceCM);
-
-	//
 	// Stop Timer4 A.
 	//
 	ROM_TimerDisable(TIMER4_BASE, TIMER_A);
-
-
-	/*//
-    // Use the flags to Toggle the LED for this timer
-    //
-    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, g_ui32Flags);*/
 
 	//
 	// Toggle the flag for the proximity timer.
@@ -423,8 +371,6 @@ Timer3IntHandler(void)
     //
     ROM_TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
 
-
-
 	// Get the timer value and reset it
 	ROM_TimerDisable(TIMER5_BASE, TIMER_A);
 	// Get the timer value
@@ -437,11 +383,6 @@ Timer3IntHandler(void)
     // Toggle the flag for the light timer.
     //
     HWREGBITW(&g_ui32InterruptFlags, 2) = 1;
-
-    //
-    // Update the interrupt status.
-    //
-
 }
 
 
@@ -489,28 +430,25 @@ calcTemp()
 		float tempF = (tempK - 273.15) * 1.8000 + 32.00;
 		g_temp_data[g_temp_index] = tempF;
 		g_temp_index++; //Increase index
-		if (g_temp_index == 50) {
-			g_temp_index = 0;
+		if (g_temp_index == 50) { //If 50 values have been read
+			g_temp_index = 0; //Reset index of array
 			HWREGBITW(&g_ui32PrintFlags, 1) = 1; //Set print flag
 		}
-		//UARTprintf("Fahrenheit Temp = %d\n", (int) tempF); //Print out temp in Fahrenheit
 	}
 }
 
 void
 calcProx()
-{     //Calculates Proximity reading
+{   //Calculates Proximity reading
 	uint32_t ui32DistanceCM; // Sensor output converted to centimeters
 	if (HWREGBITW(&g_ui32InterruptFlags, 1)) { //Proximity reading is ready
 		HWREGBITW(&g_ui32InterruptFlags, 1) = 0; //Reset flag
-		//UARTprintf("Proximity was read!\n");
 		//
 		// pulse length / system clock = pulse length in seconds
 		// pulse length in seconds / (1 / sound speed cm per s) = total wave flight distance
 		// total distance / 2 = distance from sensor
 		//
 		ui32DistanceCM = g_ui32PulseLengthTicks / 2 / (g_ui32SysClock / SOUND_CM_PER_S);
-		//UARTprintf("\033[2J\nProx data = %d\n", ui32DistanceCM);
 
 		uint32_t digit = ui32DistanceCM * 15 / SENSOR_MAX_DISTANCE;
 		if (digit > 15)
@@ -520,16 +458,10 @@ calcProx()
 
 		g_prox_data[g_prox_index] = ui32DistanceCM;
 		g_prox_index++; //Increase index
-		if (g_prox_index == 20) {
-			g_prox_index = 0;
+		if (g_prox_index == 20) { //If 20 values have been read
+			g_prox_index = 0; //Reset index of array
 			HWREGBITW(&g_ui32PrintFlags, 2) = 1; //Set print flag
 		}
-		//Update 7Seg LED
-
-		//TODO
-
-
-		//UARTprintf("Distance (cm) = %d\n", ui32DistanceCM); //Print out temp in Fahrenheit (For DEBUG)
 	}
 }
 
@@ -542,8 +474,8 @@ calcLight()
 		Freq = (65000-Timer)*10; // Freq = Counts/second. Multiplied by 10 is the same as divided by 0.1second
 		g_light_data[g_light_index] = Freq;
 		g_light_index++;
-		if (g_light_index == 100) {
-			g_light_index = 0;
+		if (g_light_index == 100) { //If 100 values have been read
+			g_light_index = 0;   //Reset index of array
 			HWREGBITW(&g_ui32PrintFlags, 3) = 1; //Set print flag
 		}
 	}
@@ -552,8 +484,9 @@ calcLight()
 void
 UARTSendData()
 { //Sends read data through UART
-	//TODO
 	int i;
+
+	//Values to hold statistical data
 	float avg_temp;
 	float min_temp = 5000;
 	float max_temp = 0;
@@ -568,7 +501,6 @@ UARTSendData()
 	uint32_t min_light = 500000;
 	uint32_t max_light = 0;
 	float    std_dev_light;
-
 
 	if (HWREGBITW(&g_ui32PrintFlags, 0)) { //Clock reading is ready
 		HWREGBITW(&g_ui32PrintFlags, 0) = 0; //Reset flag
@@ -590,27 +522,10 @@ UARTSendData()
 		}
 		std_dev_temp = std_dev_temp / 50;
 		std_dev_temp = sqrt(std_dev_temp);
-		//std_dev_temp = std_dev_temp * 100;
 
 		ROM_IntMasterDisable();
-		/*UARTprintf("\n\n+------------------------------------------------------------------------+\n");
-		UARTprintf(    "|                                 Temperature                            |\n");
-		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
-		UARTprintf(    "|       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
-		UARTprintf(    "+------------------+-------------------+------------------+--------------+\n");
-		UARTprintf(    "|      %d.%02d       |       %d.%02d       |       %d.%02d      |    %d.%03d     |\n",
-				(uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100,
-				(uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100,
-				(uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100,
-				(uint32_t) std_dev_temp, (uint32_t) ((int) (std_dev_temp * 100) % (int) std_dev_temp * 100) / 100);
-		UARTprintf(    "+------------------+-------------------+------------------+--------------+");*/
 
-
-
-		//UARTprintf("\033[3;1H+-----------------+------------------+-------------------+------------------+--------------+\n");
-		//UARTprintf("|      Sensor     |       Min        |        Max        |       Mean       |   Std. Dev.  |\n");
-		//UARTprintf("+-----------------+------------------+-------------------+------------------+--------------+\n");
-
+		//Format and print statistics
 		UARTprintf("\033[6;1HMin       Temp = %d.%02d\n", (uint32_t) min_temp,     (uint32_t) ((int) (min_temp     * 100) % (int) min_temp     * 100) / 100);
 		UARTprintf("Max       Temp = %d.%02d\n", (uint32_t) max_temp,     (uint32_t) ((int) (max_temp     * 100) % (int) max_temp     * 100) / 100);
 		UARTprintf("Mean      Temp = %d.%02d\n", (uint32_t) avg_temp,     (uint32_t) ((int) (avg_temp     * 100) % (int) avg_temp     * 100) / 100);
@@ -620,11 +535,9 @@ UARTSendData()
 
 
 	}
-	//ROM_SysCtlDelay(g_ui32SysClock / 3 / 400000); //Delay for 2us
 	if (HWREGBITW(&g_ui32PrintFlags, 2)) { //Proximity readings are ready
 		HWREGBITW(&g_ui32PrintFlags, 2) = 0; //Reset flag
 		//Print proximity data
-
 		for (i = 0; i < 20; i++) { //Calculate min, max, and mean
 			avg_prox += g_prox_data[i];
 			min_prox = g_prox_data[i] < min_prox ? g_prox_data[i] : min_prox;
@@ -638,6 +551,8 @@ UARTSendData()
 		std_dev_prox = sqrt(std_dev_prox);
 
 		ROM_IntMasterDisable();
+
+		//Format and print statistics
 		UARTprintf("\033[11;1HMin       Prox = %d\n", min_prox);
 		UARTprintf("Max       Prox = %d\n", max_prox);
 		UARTprintf("Mean      Prox = %d.%02d\n", (uint32_t) avg_prox, (uint32_t) ((int) (avg_prox * 100) % (int) avg_prox * 100) / 100);
@@ -660,6 +575,8 @@ UARTSendData()
 		std_dev_light = sqrt(std_dev_light);
 
 		ROM_IntMasterDisable();
+
+		//Format and print statistics
 		UARTprintf("\033[16;1H\033[0JMin       Light = %d\n", min_light);
 		UARTprintf("Max       Light = %d\n", max_light);
 		UARTprintf("Mean      Light = %d.%02d\n", (uint32_t) avg_light, (uint32_t) ((int) (avg_light * 100) % (int) avg_light * 100) / 100);
@@ -765,12 +682,7 @@ main(void)
     ROM_FPULazyStackingEnable(); //Enable lazy stacking for faster FPU performance
     ROM_FPUEnable(); //Enable FPU
 
-
-    TimerACount = 0;
-    TimerBCount = 0;
-    TimerCCount = 0;
-    TimerDCount = 0;
-
+    //Set array indexes to 0
     g_temp_index = 0;
     g_prox_index = 0;
     g_light_index = 0;
@@ -781,8 +693,9 @@ main(void)
     ConfigureUART();
     UARTprintf("\033[2J"); //Clear screen
 
-    //UARTprintf("\033[2JFinal Project Timers Example\n");
-
+    //
+    //Initialize ADC
+    //
     configureADC();
 
     //
@@ -812,7 +725,7 @@ main(void)
     ROM_IntMasterEnable();
 
     //
-    // Configure the four 32-bit periodic timers.
+    // Configure the timers.
     //
     ROM_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
     ROM_TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
@@ -857,7 +770,6 @@ main(void)
     {
     	//Process data (Busy-Wait Loop)
     	//If a flag hasn't been set by the interrupt the calc functions will simply exit
-    	//For performance it makes more sense to check flags here instead of at the beginning of the functions
     	calcTemp();     //Calculates Temperature reading
     	calcProx();     //Calculates Proximity reading
     	calcLight();    //Calculates Light reading
