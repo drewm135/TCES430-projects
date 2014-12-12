@@ -125,6 +125,8 @@ volatile uint32_t g_ui32PrintFlags;     //Bit 0 = Timer ready to print
 // Real Time Clock days, hours, minutes, and seconds
 //
 //*****************************************************************************
+volatile uint32_t TimerACount;
+
 volatile uint32_t RTC_Days;
 
 volatile uint32_t RTC_Hours;
@@ -203,6 +205,7 @@ void
 Timer0IntHandler(void)
 {
 	//Real time clock interrupt, keep track of days, hours, minutes, seconds
+	TimerACount++; //Increase 1/10 second count
     //
     // Clear the timer interrupt.
     //
@@ -681,6 +684,11 @@ main(void)
 
     ROM_FPULazyStackingEnable(); //Enable lazy stacking for faster FPU performance
     ROM_FPUEnable(); //Enable FPU
+
+    //
+    // Initialize RTC counter to 0
+    //
+    TimerACount = 0;
 
     //Set array indexes to 0
     g_temp_index = 0;
